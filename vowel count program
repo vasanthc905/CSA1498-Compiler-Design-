@@ -1,0 +1,22 @@
+%{
+#include <stdio.h>
+int vowel_count = 0; 
+%}
+
+%%
+
+[aA]    { vowel_count++; }
+[eE]    { vowel_count++; }
+[iI]    { vowel_count++; }
+[oO]    { vowel_count++; }
+[uU]    { vowel_count++; }
+.       { /* Ignore non-vowel characters */ }
+\n      { return 0; }  
+%%
+
+int main() {
+    printf("Enter a sentence: ");
+    yylex(); 
+    printf("Number of vowels: %d\n", vowel_count);
+    return 0;
+}
