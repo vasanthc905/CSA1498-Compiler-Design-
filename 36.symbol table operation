@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+using namespace std;
+
+#define TABLE_SIZE 10
+
+// A symbol table entry
+struct Symbol {
+    char *name;
+    char *type;
+    struct Symbol *next;  // Chaining for handling collisions
+};
+
+// Hash function to compute index for a given symbol name
+unsigned int hashFunction(const char *name) {
+    unsigned int hash = 0;
+    while (*name)
+        hash = (hash << 5) + *name++;
+    return hash % TABLE_SIZE;
+}
+
+// Insert a symbol into the table
+void insert(struct Symbol *table[], const char *name, const char *type) {
+    unsigned int index = hashFunction(name);
+    struct Symbol *newSymbol = (struct Symbol *)malloc(sizeof(struct Symbol));
+    newSymbol->name = strdup(name);
+    newSymbol->type = strdup(type);
+    newSymbol->next = table[index];  // Chaining
+    table[index] = newSymbol;
+    printf("Inserted symbol: %s with type: %s at index %d\n", name, type, index);
+}
+
+// Search for a symbol in the table
+struct Symbol *search(struct Symbol *table[], const char *name) {
+    unsigned int index = hashFunction(name);
+    struct Symbol *symbol = table[index];
+    
+    while (symbol != NULL) {
+        if (strcmp(symbol->name, name) == 0)
+            return symbol;  // Symbol found
+        symbol = symbol->next;
+    }
+    return NULL;  // Symbol not found
+}
+
+// Delete a symbol from the table
+void deleteSymbol(struct Symbol *table[], const char *name) {
+    unsigned int index = hashFunction(name);
+    struct Symbol *symbol = table[index];
+    struct Symbol *prev = NULL;
+    
+    while (symbol != NULL && strcmp(symbol->name, name) != 0) {
+        prev = symbol;
+        symbol = symbol->next;
+    }
+    
+    if (symbol == NULL) {
+        printf("Symbol not found: %s\n", name);
+        return;
+    }
+    
+    if (prev == NULL)
+        table[index] = symbol->next;  // Removing head of the list
+    else
+        prev->next = symbol->next;
+    
+    free(symbol->name);
+    free(symbol->type);
+    free(symbol);
+    printf("Deleted symbol: %s\n", name);
+}
+
+// Display the symbol table
+void display(struct Symbol *table[]) {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        struct Symbol *symbol = table[i];
+        if (symbol == NULL) {
+            printf("Index %d: Empty\n", i);
+        } else {
+            printf("Index %d:\n", i);
+            while (symbol != NULL) {
+                printf("  Symbol: %s, Type: %s\n", symbol->name, symbol->type);
+                symbol = symbol->next;
+            }
+        }
+    }
+}
+
+// Main function to demonstrate symbol table operations
+int main() {
+    struct Symbol *table[TABLE_SIZE] = { NULL };
+
+    insert(table, "x", "int");
+    insert(table, "y", "float");
+    insert(table, "z", "char");
+
+    display(table);
+
+    struct Symbol *result = search(table, "x");
+    if (result)
+        printf("Found symbol: %s of type: %s\n", result->name, result->type);
+    else
+        printf("Symbol not found\n");
+
+    deleteSymbol(table, "y");
+    display(table);
+
+    return 0;
+}
